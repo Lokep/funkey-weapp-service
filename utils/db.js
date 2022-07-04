@@ -1,57 +1,57 @@
-const config = require('../config/mysql.config')
-
-const mysql = require('mysql')
+const mysql = require('mysql');
+const config = require('../config/mysql.config');
+const STATUS_CODE = require('../constants/status-code');
 
 const pool = mysql.createPool({
   host: config.HOST,
   user: config.USERNAME,
   password: config.PASSWORD,
-  database: config.DATABASE
-})
+  database: config.DATABASE,
+});
 
-let query = (sql, values)=>{
-  return new Promise((resolve, reject)=>{
-    pool.getConnection((err, connection)=>{
+const query = (sql, values) => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, connection) => {
       if (err) {
-        resolve(err)
+        reject({
+          res: STATUS_CODE.DATABASE_CONNECTION_ERR,
+          msg: err,
+        });
       } else {
-        connection.query(sql, values, (err, rows)=>{
-          if (err) {
-            reject(err)
+        connection.query(sql, values, (error, rows) => {
+          if (error) {
+            reject({
+              res: STATUS_CODE.UNKNOWN_ERR,
+              msg: error,
+            });
           } else {
-            resolve(rows)
+            resolve(rows);
           }
-          connection.release()
-        })
+          connection.release();
+        });
       }
-    })
-  })
-}
+    });
+  });
+};
 
-let createTable = sql => {
-  return query(sql, [])
-}
+const selectAll = (table) => {
+  const _sql = 'select * from ??';
+  return query(_sql, [table]);
+};
 
-let selectAll = (table)=>{
-  let _sql = "select * from ??"
-  return query(_sql, [table])
-}
+const selectAllById = (table, id) => {
+  const _sql = 'select * from ?? where id = ?';
+  return query(_sql, [table, id]);
+};
 
-let selectAllById = (table, id)=>{
-  let _sql = "select * from ?? where id = ?"
-  return query(_sql, [table, id])
-}
-
-let selectKeys = (table, keys)=>{
-  let _sql = "select ?? from ??"
-  return query(_sql, [keys, table])
-}
-
+const selectKeys = (table, keys) => {
+  const _sql = 'select ?? from ??';
+  return query(_sql, [keys, table]);
+};
 
 module.exports = {
   query,
-  createTable,
   selectAll,
   selectAllById,
   selectKeys,
-}
+};
