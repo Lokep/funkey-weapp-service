@@ -6,13 +6,20 @@
     "start": "node bin/www",
     "dev": "./node_modules/.bin/nodemon bin/www",
     "prd": "pm2 start bin/www",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "f2elint-scan": "f2elint scan",
+    "f2elint-fix": "f2elint fix"
   },
   "dependencies": {
+    "axios": "^0.27.2",
+    "cheerio": "^1.0.0-rc.12",
+    "dayjs": "^1.11.3",
     "debug": "^4.1.1",
+    "form-data": "^4.0.0",
     "ioredis": "^5.0.5",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
+    "koa-connect": "^2.1.0",
     "koa-convert": "^1.2.0",
     "koa-json": "^2.0.2",
     "koa-logger": "^3.2.0",
@@ -22,10 +29,18 @@
     "koa-static": "^5.0.0",
     "koa-views": "^6.2.0",
     "koa2-cors": "^2.0.6",
+    "log4js": "^6.5.2",
     "mysql": "^2.18.1",
     "pug": "^2.0.3"
   },
   "devDependencies": {
+    "f2elint": "^2.2.1",
     "nodemon": "^1.19.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "f2elint commit-file-scan",
+      "commit-msg": "f2elint commit-msg-scan"
+    }
   }
 }
