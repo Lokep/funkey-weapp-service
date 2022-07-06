@@ -1,3 +1,5 @@
+const { default: axios } = require('axios');
+const cheerio = require('cheerio');
 const dayjs = require('dayjs');
 const STATUS_CODE = require('../constants/status-code');
 const db = require('../utils/db');
@@ -130,6 +132,149 @@ async function addArticle({
  */
 // async function setStar({ id, star }) {}
 
+/**
+ *
+ * @param {String} link
+ * @return {Number} origin     文章来源 0-全部 1-wechat 2-juejin 3-zhihu 100-其他
+ */
+async function articleResolver(link) {
+  let result = {
+    res: STATUS_CODE.COMMON_ERR,
+    data: {},
+  };
+  let origin = 100;
+
+  if (!link) {
+    return {
+      res: STATUS_CODE.COMMON_ERR,
+      data: {},
+      msg: '',
+    };
+  }
+
+  const aid = link.split('/').pop();
+
+  if (link.indexOf('weixin') > -1) {
+    origin = 1;
+    result = await wechatArticleResolver(link);
+  }
+
+  if (link.indexOf('juejin') > -1) {
+    origin = 2;
+    result = await juejinArticleResolver(link);
+  }
+
+  if (link.indexOf('zhihu') > -1) {
+    origin = 3;
+    result = await zhihuArticleResolver(link);
+  }
+
+  result.data = {
+    ...result.data,
+    aid,
+    origin,
+  };
+
+  return { ...result };
+}
+
+/**
+ * 微信公众号文章解析器
+ * @param {String} link
+ * @returns
+ */
+async function wechatArticleResolver(link) {
+  const res = await axios({ url: link });
+  const $ = cheerio.load(res.data);
+
+  const author = $('meta[name="author"]').attr('content');
+  const banner = $('meta[property="og:image"]').attr('content');
+  const title = $('meta[property="og:title"]').attr('content');
+  const authorAvatar = $('.avatar').attr('src');
+
+  const startText = 'i&&(i.innerText=r)};if(!window.__second_open__){e(';
+  const endText = ',document.getElementById("publish_time")';
+
+  const startIndex = res.data.indexOf(startText) + startText.length;
+  const endIndex = res.data.indexOf(endText); // - endText.length;
+
+  const list = res.data.slice(startIndex, endIndex).split(',');
+
+  const updateAt = new Date(1e3 * (1 * Number(JSON.parse(list[1]))));
+
+  return {
+    res: STATUS_CODE.SUCCESS,
+    data: {
+      author,
+      banner,
+      authorAvatar,
+      updateAt: dayjs(updateAt).format('YYYY-MM-DD hh:mm:ss'),
+      title,
+    },
+  };
+}
+
+/**
+ * 掘金文章解析器
+ * @param {String} link
+ * @returns
+ */
+async function juejinArticleResolver(link) {
+  const res = await axios({ url: link });
+  const $ = cheerio.load(res.data);
+
+  const title = $('meta[itemprop="headline"]').attr('content');
+  const updateAt = $('meta[itemprop="datePublished"]').attr('content');
+  const author = $('meta[itemprop="name"]').attr('content');
+
+  const authorAvatar = res.data.match(/avatar_large:"(.*?)"/)[1].replace(/\\u002F/g, '/');
+
+  // banner 从data-n-head = ssr 中获取
+  const ssr = $('script[data-n-head="ssr"]').text();
+  let banner = '';
+
+  if (ssr) {
+    const [blogPost] = JSON.parse(ssr);
+    const [image = ''] = blogPost.image;
+    banner = image;
+  }
+
+  return {
+    res: STATUS_CODE.SUCCESS,
+    data: {
+      author,
+      banner,
+      authorAvatar,
+      updateAt: dayjs(updateAt).format('YYYY-MM-DD hh:mm:ss'),
+      title,
+    },
+  };
+}
+
+async function zhihuArticleResolver(link) {
+  const res = await axios({ url: link });
+  const $ = cheerio.load(res.data);
+
+  const title = $('.Post-Title').text();
+  const authorAvatar = $('.Avatar.Avatar--round.AuthorInfo-avatar').attr('src');
+  const author = $('.UserLink-link').text();
+  const updateAt = $('.ContentItem-time').text().replace('发布于', '');
+  const banner = $('.origin_image.zh-lightbox-thumb').attr('data-actualsrc');
+  const content = $('.Post-RichTextContainer').html();
+
+  return {
+    res: STATUS_CODE.SUCCESS,
+    data: {
+      author,
+      banner,
+      authorAvatar,
+      updateAt: dayjs(updateAt).format('YYYY-MM-DD hh:mm:ss'),
+      title,
+      content,
+    },
+  };
+}
+
 module.exports = {
   getArticleList,
   addArticle,
@@ -137,4 +282,9 @@ module.exports = {
   // deleteArticleById,
 
   // setStar,
+
+  wechatArticleResolver,
+  juejinArticleResolver,
+  zhihuArticleResolver,
+  articleResolver,
 };
