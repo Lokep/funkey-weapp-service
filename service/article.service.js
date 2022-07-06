@@ -30,7 +30,9 @@ async function getArticleList({
   timeStart = '',
   timeEnd = '',
 }) {
-  const sql = ['select * from article where is_delete = 0 '];
+  const sql = [
+    'select id, aid, title, origin, origin_link, author, author_avatar, tag, banner, update_at from article where is_delete = 0 ',
+  ];
 
   if (title) sql.push(`title='${title}'`);
   if (origin) sql.push(`origin=${origin}`);
