@@ -11,15 +11,6 @@ const jumpTypeMap = new Map([
   ['customWeapp', 4],
 ]);
 
-/**
- * 0- false
- * 1- true
- */
-const boolMap = new Map([
-  ['falsy', 0],
-  ['truthy', 1],
-]);
-
 const bannerStatusMap = new Map([
   ['normal', 0],
   ['frozen', 1],
@@ -29,6 +20,5 @@ const bannerStatusMap = new Map([
 
 module.exports = {
   jumpTypeMap,
-  boolMap,
   bannerStatusMap,
 };

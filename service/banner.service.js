@@ -1,5 +1,6 @@
 const dayjs = require('dayjs');
-const { jumpTypeMap, boolMap, bannerStatusMap } = require('../constants/banner');
+const { boolMap } = require('../constants/app');
+const { jumpTypeMap, bannerStatusMap } = require('../constants/banner');
 const STATUS_CODE = require('../constants/status-code');
 const { isTimeValid } = require('../utils');
 const db = require('../utils/db');
@@ -143,7 +144,10 @@ async function updateBanner({
   const sql = [];
 
   if (!id) {
-    return false;
+    return {
+      res: STATUS_CODE.COMMON_ERR,
+      msg: 'id不能为空',
+    };
   }
 
   if (isTimeValid(onlineTimeStart)) {
@@ -171,7 +175,7 @@ async function updateBanner({
   }
 
   try {
-    await db.query(`UPDATE banner SET ${  sql.join(',')  } where id = ${id}`);
+    await db.query(`UPDATE banner SET ${sql.join(',')} where id = ${id}`);
     return {
       res: STATUS_CODE.SUCCESS,
       msg: '更新成功',

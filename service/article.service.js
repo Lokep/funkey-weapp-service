@@ -1,7 +1,10 @@
 const { default: axios } = require('axios');
 const cheerio = require('cheerio');
 const dayjs = require('dayjs');
+const { boolMap } = require('../constants/app');
+const { ORIGIN_LIST } = require('../constants/article');
 const STATUS_CODE = require('../constants/status-code');
+const { isNumber, isString } = require('../utils');
 const db = require('../utils/db');
 
 /**
@@ -121,16 +124,86 @@ async function addArticle({
   }
 }
 
-// async function updateArticle() {}
+/**
+ * 编辑文章信息
+ * @param {Number} id       文章id
+ * @param {String} title    标题
+ * @param {Number} origin   文章来源 0-全部 1-wechat 2-juejin 3-zhihu 100-其他
+ * @param {String} author   作者
+ * @param {Number} star     是否为星标文章 0-非星标 1-星标
+ * @param {String} tag      文章标签
+ * @param {Number} isDelete 是否删除 0-未删除 1-已删除
+ */
+async function updateArticle({
+  id,
+  title = null,
+  origin = null,
+  author = null,
+  star = 0, // 默认为非星标
+  tag = null,
+  isDelete = 0,
+}) {
+  const sql = [];
 
-// async function deleteArticleById() {}
+  if (id) {
+    return {
+      res: STATUS_CODE.COMMON_ERR,
+      msg: 'id不能为空',
+    };
+  }
+
+  if (title) {
+    sql.push(`title='${title}'`);
+  }
+
+  if (origin && ORIGIN_LIST.includes(origin)) {
+    sql.push(`origin=${origin}`);
+  }
+
+  if (author) {
+    sql.push(`author='${author}'`);
+  }
+
+  if (isNumber(star) && star <= boolMap.get('truthy')) {
+    sql.push(`star=${star}`);
+  }
+
+  if (isString(tag)) {
+    sql.push(`tag='${tag}'`);
+  }
+
+  if (isNumber(isDelete) && isDelete <= boolMap.get('truthy')) {
+    sql.push(`is_delete=${isDelete}`);
+  }
+
+  try {
+    await db.query(`UPDATE article SET ${sql.join(',')} where id = ${id}`);
+    return {
+      res: STATUS_CODE.SUCCESS,
+      msg: '更新成功',
+    };
+  } catch ({ res = STATUS_CODE.UNKNOWN_ERR, msg = '系统异常' }) {
+    return {
+      res,
+      msg,
+    };
+  }
+}
+
+async function deleteArticleById({ id }) {
+  const res = await updateArticle({ id, isDelete: 1 });
+  return res;
+}
 
 /**
  * 设置为星标文章
  * @param {String} id 文章id
  * @param {Number} star 是否为星标 0-非星标， 1-星标
  */
-// async function setStar({ id, star }) {}
+async function setStar({ id, star }) {
+  const res = await updateArticle({ id, star });
+  return res;
+}
 
 /**
  *
@@ -278,10 +351,10 @@ async function zhihuArticleResolver(link) {
 module.exports = {
   getArticleList,
   addArticle,
-  // updateArticle,
-  // deleteArticleById,
+  updateArticle,
+  deleteArticleById,
 
-  // setStar,
+  setStar,
 
   wechatArticleResolver,
   juejinArticleResolver,
