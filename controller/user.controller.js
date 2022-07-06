@@ -1,14 +1,14 @@
-const router = require('koa-router')()
-const { getUserList } = require('../service/user.service')
+const router = require('koa-router')();
+const { getUserList } = require('../service/user.service');
 
-router.prefix('/u')
+router.prefix('/u');
 
-router.get('/', async (ctx, next) => {
-  ctx.body = await getUserList()
-})
+router.get('/', async (ctx) => {
+  ctx.body = await getUserList();
+});
 
-router.get('/bar', function (ctx, next) {
-  ctx.body = 'this is a users/bar response'
-})
+router.get('/bar', (ctx) => {
+  ctx.body = 'this is a users/bar response';
+});
 
-module.exports = router
+module.exports = router;

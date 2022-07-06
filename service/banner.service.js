@@ -171,7 +171,7 @@ async function updateBanner({
   }
 
   try {
-    await db.query(`UPDATE banner SET ` + sql.join(',') + ` where id = ${id}`);
+    await db.query(`UPDATE banner SET ${  sql.join(',')  } where id = ${id}`);
     return {
       res: STATUS_CODE.SUCCESS,
       msg: '更新成功',

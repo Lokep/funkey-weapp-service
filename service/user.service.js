@@ -1,11 +1,10 @@
-const db = require('../utils/db')
+const db = require('../utils/db');
 
-const getUserList = async (ctx, next) => {
-  let result = await db.selectAll('user')
-  return result
-}
-
+const getUserList = async () => {
+  const result = await db.selectAll('user');
+  return result;
+};
 
 module.exports = {
-  getUserList
-}
+  getUserList,
+};
