@@ -6,6 +6,7 @@ const onerror = require('koa-onerror');
 const bodyparser = require('koa-bodyparser');
 const logger = require('koa-logger');
 const compress = require('koa-compress');
+const { toHump } = require('./utils/to-hump');
 
 // const cors = require('koa2-cors');
 
@@ -41,15 +42,22 @@ app.use(
 
 app.use(json());
 app.use(logger());
-// app.use(require("koa-static")(__dirname + "/public"));
 
-// logger
 app.use(async (ctx, next) => {
   const start = new Date();
   await next();
   const ms = new Date() - start;
   console.log(`${ctx.method} ${ctx.url} - ${ms}ms`);
 });
+
+app.use(
+  compress({
+    threshold: 2048,
+    flush: require('zlib').Z_SYNC_FLUSH,
+  }),
+);
+
+app.use(toHump);
 
 // routes
 app.use(weapp.routes(), weapp.allowedMethods());
@@ -62,15 +70,5 @@ app.use(article.routes(), article.allowedMethods());
 app.on('error', (err, ctx) => {
   console.error('server error', err, ctx);
 });
-
-app.use(
-  compress({
-    filter(content_type) {
-      return /text/i.test(content_type);
-    },
-    threshold: 2048,
-    flush: require('zlib').Z_SYNC_FLUSH,
-  }),
-);
 
 module.exports = app;

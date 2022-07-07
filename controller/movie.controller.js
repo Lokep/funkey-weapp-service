@@ -17,8 +17,6 @@ router.post('/edit', async (ctx) => {
 
   const { id, ...params } = ctx.request.body;
 
-  console.log(ctx.request.body);
-
   try {
     await addMovie(params);
 
