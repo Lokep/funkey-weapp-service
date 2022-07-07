@@ -147,7 +147,7 @@ async function updateArticle({
 }) {
   const sql = [];
 
-  if (id) {
+  if (!id) {
     return {
       res: STATUS_CODE.COMMON_ERR,
       msg: 'id不能为空',
@@ -265,7 +265,9 @@ async function wechatArticleResolver(link) {
   const author = $('meta[name="author"]').attr('content');
   const banner = $('meta[property="og:image"]').attr('content');
   const title = $('meta[property="og:title"]').attr('content');
-  const authorAvatar = $('.avatar').attr('src');
+  const authorAvatar = $('.js_uneditable.custom_select_card.mp_profile_iframe').attr(
+    'data-headimg',
+  );
 
   const startText = 'i&&(i.innerText=r)};if(!window.__second_open__){e(';
   const endText = ',document.getElementById("publish_time")';
