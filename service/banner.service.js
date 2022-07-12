@@ -112,6 +112,7 @@ async function getBannerList({
 
   try {
     const list = await db.query(sql.join(' and '));
+    console.log(sql.join(' and '));
     return {
       res: STATUS_CODE.SUCCESS,
       data: list,

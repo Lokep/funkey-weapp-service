@@ -1,5 +1,9 @@
+const dayjs = require('dayjs');
+const { isDate } = require('.');
+
 function toHumpFun(obj) {
   const result = Array.isArray(obj) ? [] : {};
+
   for (const key in obj) {
     // eslint-disable-next-line no-prototype-builtins
     if (obj.hasOwnProperty(key)) {
@@ -18,12 +22,15 @@ function toHumpFun(obj) {
         result[newKey] = element;
       }
 
-      if (typeof element === 'object' && element !== null) {
+      if (typeof element === 'object' && element !== null && !isDate(element)) {
         result[newKey] = toHumpFun(element);
+      }
+
+      if (isDate(element)) {
+        result[newKey] = dayjs(element).format('YYYY-MM-DD hh:mm:ss');
       }
     }
   }
-  console.log('[result]: ', result, '--');
   return result;
 }
 
