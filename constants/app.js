@@ -1,4 +1,7 @@
-const appMap = new Map([['funkey', 'wx30b5d20334d89772']]);
+const appMap = new Map([
+  ['appid', 'wxde4d53888f44c399'],
+  ['secret', '5cc81cf0cbc3fbdd14870d0d2c594eef'],
+]);
 
 /**
  * 0- false

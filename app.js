@@ -11,10 +11,11 @@ const { toHump } = require('./utils/to-hump');
 // const cors = require('koa2-cors');
 
 const weapp = require('./controller/weapp.controller');
-const user = require('./controller/user.controller');
-const movie = require('./controller/movie.controller');
-const banner = require('./controller/banner.controller');
-const article = require('./controller/article.controller');
+const vote = require('./controller/vote.controller');
+const shop = require('./controller/shop.controller');
+
+const { isObject } = require('./utils');
+const { emptyFilter } = require('./utils/empty-filter');
 
 app.use(async (ctx, next) => {
   ctx.set('Access-Control-Allow-Origin', '*');
@@ -44,6 +45,21 @@ app.use(json());
 app.use(logger());
 
 app.use(async (ctx, next) => {
+  const query = ctx.request.query;
+  const body = ctx.request.body;
+
+  if (isObject(query)) {
+    ctx.request.query = emptyFilter(query);
+  }
+
+  if (isObject(body)) {
+    ctx.request.body = emptyFilter(body);
+  }
+
+  await next();
+});
+
+app.use(async (ctx, next) => {
   const start = new Date();
   await next();
   const ms = new Date() - start;
@@ -61,10 +77,8 @@ app.use(toHump);
 
 // routes
 app.use(weapp.routes(), weapp.allowedMethods());
-app.use(user.routes(), user.allowedMethods());
-app.use(movie.routes(), movie.allowedMethods());
-app.use(banner.routes(), banner.allowedMethods());
-app.use(article.routes(), article.allowedMethods());
+app.use(vote.routes(), vote.allowedMethods());
+app.use(shop.routes(), shop.allowedMethods());
 
 // error-handling
 app.on('error', (err, ctx) => {
