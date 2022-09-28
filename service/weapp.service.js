@@ -1,5 +1,5 @@
 const { default: axios } = require('axios');
-const { appMap } = require('../constants/app');
+const appMap = require('../config/weapp.config');
 const { COMMON_ERR } = require('../constants/status-code');
 const db = require('../utils/db');
 
