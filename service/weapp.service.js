@@ -1,4 +1,6 @@
 const { default: axios } = require('axios');
+const { v4: uuidv4 } = require('uuid');
+
 const appMap = require('../config/weapp.config');
 const { COMMON_ERR } = require('../constants/status-code');
 const db = require('../utils/db');
@@ -10,7 +12,8 @@ async function login(code) {
     /**
      * 查找用户
      */
-    const isExit = await findUserByOpenId(res.openid);
+    const list = await findUserByOpenId(res.openid);
+    const isExit = list.length > 0;
 
     if (!isExit) {
       addUser({ openId: res.openid });
@@ -68,9 +71,9 @@ function findUserByOpenId(openId) {
   `,
     )
     .then((list = []) => {
-      return list.length > 0;
+      return list.length;
     })
-    .catch(() => false);
+    .catch(() => []);
 }
 
 /**
@@ -84,20 +87,16 @@ function addUser({
   gender = 0,
   language = 'chinese',
   nickName = '',
+  email = '',
+  notify = 0,
 }) {
-  console.log(`
-  INSERT INTO tmp_user
-  ('open_id, 'union_id', 'avatar_url', 'gender', 'language', 'nick_name')
-  VALUES
-  ('${openId}', '${unionId}', '${avatarUrl}', ${gender}, '${language}', '${nickName}');
-`);
   return db
     .query(
       `
       INSERT INTO tmp_user
       (open_id, union_id, avatar_url, gender, language, nick_name)
       VALUES
-      ('${openId}', '${unionId}', '${avatarUrl}', ${gender}, '${language}', '${nickName}');
+      ('${openId}', '${unionId}', '${avatarUrl}', ${gender}, '${language}', '${nickName}','${email}', ${notify});
   `,
     )
     .then((list = []) => {
@@ -107,12 +106,48 @@ function addUser({
 }
 
 /**
+ * 更新用户信息
+ */
+async function updateUser({
+  openId = '',
+  unionId = '',
+  avatarUrl = '',
+  gender = 0,
+  language = 'chinese',
+  nickName = '',
+  email = '',
+  notify = 0,
+}) {
+  const user = await findUserByOpenId(openId);
+
+  const row = {
+    ...user,
+    unionId: unionId || user.union_id,
+    avatarUrl: avatarUrl || user.avatar_url,
+    gender,
+    language,
+    nickName: nickName || user.nick_name,
+    email,
+    notify,
+  };
+
+  return db.query(`
+    UPDATE tmp_user
+    SET 'union_id' = '${row.unionId}', 'avatar_url' = '${row.avatarUrl}', 'gender' = ${row.gender}, 'language' = '${row.language}', 'nick_name' = '${row.nickName}', 'email' = '${row.email}', 'notify' = ${row.notify}
+    WHERE 'open_id' = '${openId}';
+  `);
+}
+
+/**
  * 生成token
  */
-function generateToken() {}
+function generateToken() {
+  const token = uuidv4();
+  return token;
+}
 
 module.exports = {
   login,
-
   generateToken,
+  updateUser,
 };

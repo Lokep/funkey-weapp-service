@@ -6,7 +6,7 @@ function emptyFilter(obj) {
   if (isObject(obj)) {
     for (const key in obj) {
       // eslint-disable-next-line no-prototype-builtins
-      if (!obj.hasOwnProperty(key)) {
+      if (obj.hasOwnProperty && !obj.hasOwnProperty(key)) {
         continue;
       }
 

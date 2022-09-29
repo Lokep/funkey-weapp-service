@@ -1,4 +1,6 @@
 const router = require('koa-router')();
+const { COMMON_ERR } = require('../constants/status-code');
+const { getUserList } = require('../service/user.service');
 const { login } = require('../service/weapp.service');
 
 /**
@@ -20,10 +22,31 @@ router.post('/login', async (ctx) => {
   const { code } = ctx.request.body;
 
   try {
-    ctx.body = await login(code);
+    const info = await login(code);
+    ctx.body = {
+      res: 0,
+      data: info,
+    };
   } catch (error) {
-    console.log(error);
-    ctx.body = error;
+    ctx.body = {
+      res: COMMON_ERR,
+      msg: error,
+    };
+  }
+});
+
+router.get('/friends', async (ctx) => {
+  try {
+    const list = await getUserList();
+    ctx.body = {
+      res: 0,
+      data: list,
+    };
+  } catch (error) {
+    ctx.body = {
+      res: COMMON_ERR,
+      msg: error,
+    };
   }
 });
 

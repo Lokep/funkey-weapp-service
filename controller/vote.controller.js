@@ -1,3 +1,12 @@
+const { COMMON_ERR } = require('../constants/status-code');
+const {
+  getVoteRecordsByDateAndOpenId,
+  getVoteRecordsByDate,
+  getDistinctVoteRecordsByOpenId,
+  vote,
+  getCreator,
+} = require('../service/vote.service');
+
 const router = require('koa-router')();
 
 /**
@@ -13,12 +22,78 @@ const router = require('koa-router')();
  */
 router.prefix('/vote');
 
-router.get('/', (ctx) => {
-  ctx.body = 'this is a users response!';
+/**
+ * 发起投票
+ */
+router.post('/set-up-vote', (ctx) => {
+  const { openId } = ctx.request.body;
+
+  getCreator(openId);
+
+  ctx.body = {
+    res: 0,
+  };
 });
 
-router.get('/bar', (ctx) => {
-  ctx.body = 'this is a users/bar response';
+// 投票
+router.post('/vote', async (ctx) => {
+  const { openId, shopId } = ctx.query.body;
+
+  try {
+    await vote({ openId, shopId });
+    const list = await getVoteRecordsByDate();
+    ctx.body = {
+      res: 0,
+      data: list,
+    };
+  } catch (err) {
+    ctx.body = {
+      res: COMMON_ERR,
+      msg: err,
+    };
+  }
+});
+
+/**
+ * 投票详情
+ */
+router.get('/detail', async (ctx) => {
+  const { date, openId } = ctx.query;
+  try {
+    const info = await getVoteRecordsByDateAndOpenId(openId, date);
+    const list = await getVoteRecordsByDate(date);
+    ctx.body = {
+      res: 0,
+      data: {
+        info,
+        list,
+      },
+    };
+  } catch (error) {
+    ctx.body = {
+      res: COMMON_ERR,
+      msg: error,
+    };
+  }
+});
+
+// 投票记录
+router.get('/vote-records', async (ctx) => {
+  const { openId } = ctx.query;
+
+  try {
+    const list = await getDistinctVoteRecordsByOpenId(openId);
+
+    ctx.body = {
+      res: 0,
+      data: list,
+    };
+  } catch (err) {
+    ctx.body = {
+      res: COMMON_ERR,
+      msg: err,
+    };
+  }
 });
 
 module.exports = router;
