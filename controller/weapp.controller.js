@@ -23,7 +23,8 @@ router.post('/login', async (ctx) => {
 
   try {
     const info = await login(code);
-    const [user] = await findUserByOpenId(info.openId);
+
+    const [user] = await findUserByOpenId(info.openid);
     ctx.body = {
       res: 0,
       data: { ...info, ...user },
