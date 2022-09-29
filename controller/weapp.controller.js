@@ -47,6 +47,7 @@ router.post('/update-user-info', async (ctx) => {
       data: userInfo,
     };
   } catch (err) {
+    console.log(err);
     ctx.body = {
       res: COMMON_ERR,
       msg: err,

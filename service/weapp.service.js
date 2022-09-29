@@ -126,7 +126,7 @@ async function updateUser({
 
   const row = {
     ...user,
-    unionId: unionId || user.union_id,
+    unionId: unionId || user.union_id || '',
     avatarUrl: avatarUrl || user.avatar_url,
     gender,
     language,
@@ -137,8 +137,8 @@ async function updateUser({
 
   return db.query(`
     UPDATE tmp_user
-    SET 'union_id' = '${row.unionId}', 'avatar_url' = '${row.avatarUrl}', 'gender' = ${row.gender}, 'language' = '${row.language}', 'nick_name' = '${row.nickName}', 'email' = '${row.email}', 'notify' = ${row.notify}
-    WHERE 'open_id' = '${openId}';
+    SET union_id = '${row.unionId}', avatar_url = '${row.avatarUrl}', gender = ${row.gender}, language = '${row.language}', nick_name = '${row.nickName}', email = '${row.email}', notify = ${row.notify}
+    WHERE open_id = '${openId}';
   `);
 }
 

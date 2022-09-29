@@ -109,7 +109,7 @@ function updateVoteRecordByCreatorId({
 }) {
   return db.query(`
     UPDATE tmp_vote
-    SET result_id = ${shopId}, status = ${status}
+    SET result_id = '${shopId}', status = ${status}
     WHERE creator_id = '${openId}' and create_at = '${date}'
   `);
 }

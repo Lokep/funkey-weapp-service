@@ -36,7 +36,7 @@ function updateShop({ shopId, name, logo, count }) {
       `
   UPDATE tmp_shop
   SET name = '${name}', logo = '${logo}', count = ${count}
-  WHERE id = ${shopId};
+  WHERE id = '${shopId}';
   `,
     )
     .then((res) => res);
