@@ -1,7 +1,7 @@
 const router = require('koa-router')();
 const { COMMON_ERR } = require('../constants/status-code');
 const { getUserList } = require('../service/user.service');
-const { login } = require('../service/weapp.service');
+const { login, updateUser } = require('../service/weapp.service');
 
 /**
  * 小程序controller
@@ -31,6 +31,24 @@ router.post('/login', async (ctx) => {
     ctx.body = {
       res: COMMON_ERR,
       msg: error,
+    };
+  }
+});
+
+router.post('/update-user-info', async (ctx) => {
+  const userInfo = ctx.request.body;
+
+  try {
+    await updateUser(userInfo);
+
+    ctx.body = {
+      res: 0,
+      data: userInfo,
+    };
+  } catch (err) {
+    ctx.body = {
+      res: COMMON_ERR,
+      msg: err,
     };
   }
 });

@@ -71,7 +71,7 @@ function findUserByOpenId(openId) {
   `,
     )
     .then((list = []) => {
-      return list.length;
+      return list;
     })
     .catch(() => []);
 }
@@ -119,6 +119,10 @@ async function updateUser({
   notify = 0,
 }) {
   const user = await findUserByOpenId(openId);
+
+  if (user.length === 0) {
+    return addUser(...arguments);
+  }
 
   const row = {
     ...user,
