@@ -1,7 +1,7 @@
 const router = require('koa-router')();
 const { COMMON_ERR } = require('../constants/status-code');
 const { getUserList } = require('../service/user.service');
-const { login, updateUser } = require('../service/weapp.service');
+const { login, updateUser, findUserByOpenId } = require('../service/weapp.service');
 
 /**
  * 小程序controller
@@ -23,9 +23,10 @@ router.post('/login', async (ctx) => {
 
   try {
     const info = await login(code);
+    const [user] = await findUserByOpenId(info.openId);
     ctx.body = {
       res: 0,
-      data: info,
+      data: { ...info, ...user },
     };
   } catch (error) {
     ctx.body = {

@@ -154,4 +154,5 @@ module.exports = {
   login,
   generateToken,
   updateUser,
+  findUserByOpenId,
 };
