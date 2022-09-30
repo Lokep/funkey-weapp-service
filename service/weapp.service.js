@@ -118,7 +118,7 @@ async function updateUser({
   email = '',
   notify = 0,
 }) {
-  const user = await findUserByOpenId(openId);
+  const [user] = await findUserByOpenId(openId);
 
   if (user.length === 0) {
     return addUser(...arguments);
@@ -128,11 +128,11 @@ async function updateUser({
     ...user,
     unionId: unionId || user.union_id || '',
     avatarUrl: avatarUrl || user.avatar_url,
-    gender,
-    language,
+    gender: gender || user.gender,
+    language: language || user.language,
     nickName: nickName || user.nick_name,
-    email,
-    notify,
+    email: email || user.email,
+    notify: notify || user.notify,
   };
 
   return db.query(`

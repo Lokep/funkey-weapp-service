@@ -14,6 +14,21 @@ function getShopList() {
     .catch((err) => err);
 }
 
+async function getClearShopList(openId) {
+  const shopList = await getShopList();
+  const blackMenuList = await getPersonalBlackMenuList(openId);
+
+  const clearList = shopList.reduce((list, item) => {
+    if (blackMenuList.some((el) => el.sid === item.id)) {
+      return list;
+    } else {
+      return [...list, item];
+    }
+  }, []);
+
+  return clearList;
+}
+
 function addShop({ name, logo = '', count = 0 }) {
   return db
     .query(`INSERT INTO tmp_shop (name, logo, count) VALUES ('${name}', '${logo}', ${count});`)
@@ -49,7 +64,7 @@ function getPersonalBlackMenuList(openId) {
     SELECT b.id, b.sid, s.name,s.logo,b.open_id
     FROM tmp_black_menu b
     LEFT JOIN tmp_shop s on b.sid = s.id
-    WHERE b.open_id = '${openId}'
+    WHERE b.open_id = '${openId}' and b.is_delete = 1
   `,
     )
     .then((list = []) => {
@@ -98,4 +113,5 @@ module.exports = {
 
   findShopByShopId,
   updateShop,
+  getClearShopList,
 };

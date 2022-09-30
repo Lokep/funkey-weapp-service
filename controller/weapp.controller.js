@@ -43,12 +43,13 @@ router.post('/update-user-info', async (ctx) => {
   try {
     await updateUser(userInfo);
 
+    const [user] = await findUserByOpenId(userInfo.openId);
+
     ctx.body = {
       res: 0,
-      data: userInfo,
+      data: user,
     };
   } catch (err) {
-    console.log(err);
     ctx.body = {
       res: COMMON_ERR,
       msg: err,

@@ -1,9 +1,9 @@
 const { COMMON_ERR } = require('../constants/status-code');
 const {
-  getShopList,
   getPersonalBlackMenuList,
   addPersonalBlackMenuRecord,
   updatePersonalBlackMenuRecord,
+  getClearShopList,
 } = require('../service/shop.service');
 
 const router = require('koa-router')();
@@ -23,16 +23,7 @@ router.prefix('/shop');
 router.get('/list', async (ctx) => {
   const { openId } = ctx.query;
   try {
-    const shopList = await getShopList();
-    const blackMenuList = await getPersonalBlackMenuList(openId);
-
-    const clearList = shopList.reduce((list, item) => {
-      if (blackMenuList.some((el) => el.sid === item.id)) {
-        return list;
-      } else {
-        return [...list, item];
-      }
-    }, []);
+    const clearList = await getClearShopList(openId);
 
     ctx.body = {
       res: 0,

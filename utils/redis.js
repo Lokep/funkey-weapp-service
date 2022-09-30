@@ -1,14 +1,9 @@
 const REDIS_CONF = require('../config/redis.config');
-/* redis 配置
-  REDIS_CONF = {
-    host: '127.0.0.1',
-    port: '6379',
-    pwd:'123456'
-}
-*/
+const { isObject } = require('../utils/index');
 
 // 创建客户端
 const Redis = require('ioredis');
+
 const redisClient = new Redis({
   host: REDIS_CONF.host,
   port: REDIS_CONF.port,
@@ -31,14 +26,13 @@ redisClient.on('ready', (res) => {
  * @returns
  */
 function set(key, val, time) {
-  // if (typeof val === 'object') {
-  //   val = val;
-  // }
-  return redisClient.set(key, val, (err, data) => {
+  const content = isObject(val) ? JSON.stringify(val) : val;
+
+  return redisClient.set(key, content, (err, data) => {
     if (!err && time) {
       // key   时间
       redisClient.expire(key, time, (err1, data1) => {
-        console.log(data, data1);
+        console.log(err, err1, data1, data);
       });
     }
   });
@@ -46,7 +40,13 @@ function set(key, val, time) {
 
 function get(key) {
   return redisClient.get(key, (err, doc) => {
-    return doc;
+    try {
+      const content = doc == null ? doc : JSON.parse(doc);
+
+      return content;
+    } catch (error) {
+      return doc;
+    }
   });
 }
 

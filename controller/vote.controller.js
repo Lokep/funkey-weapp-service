@@ -1,4 +1,7 @@
+const { address } = require('../constants/app');
 const { COMMON_ERR } = require('../constants/status-code');
+const { getClearShopList } = require('../service/shop.service');
+const { getUserList } = require('../service/user.service');
 const {
   getVoteRecordsByDateAndOpenId,
   getVoteRecordsByDate,
@@ -6,6 +9,7 @@ const {
   vote,
   getCreator,
 } = require('../service/vote.service');
+const { findUserByOpenId } = require('../service/weapp.service');
 
 const router = require('koa-router')();
 
@@ -25,10 +29,10 @@ router.prefix('/vote');
 /**
  * 发起投票
  */
-router.post('/set-up-vote', (ctx) => {
+router.post('/set-up-vote', async (ctx) => {
   const { openId } = ctx.request.body;
 
-  getCreator(openId);
+  await getCreator(openId);
 
   ctx.body = {
     res: 0,
@@ -36,8 +40,8 @@ router.post('/set-up-vote', (ctx) => {
 });
 
 // 投票
-router.post('/vote', async (ctx) => {
-  const { openId, shopId } = ctx.query.body;
+router.post('/submit', async (ctx) => {
+  const { openId, shopId } = ctx.request.body;
 
   try {
     await vote({ openId, shopId });
@@ -59,22 +63,57 @@ router.post('/vote', async (ctx) => {
  */
 router.get('/detail', async (ctx) => {
   const { date, openId } = ctx.query;
-  try {
-    const info = await getVoteRecordsByDateAndOpenId(openId, date);
-    const list = await getVoteRecordsByDate(date);
-    ctx.body = {
+  const { openId: creatorId } = await getCreator();
+
+  return Promise.all([
+    getVoteRecordsByDateAndOpenId(openId, date),
+    getVoteRecordsByDate(date),
+    findUserByOpenId(creatorId),
+    getUserList(),
+    getClearShopList(),
+  ])
+    .then(([[info], list, [creator], members, shops]) => ({
       res: 0,
       data: {
+        date,
+        address,
+        creator,
         info,
-        list,
+        votes: list,
+        shops,
+        members,
       },
-    };
-  } catch (error) {
-    ctx.body = {
+    }))
+    .catch((err) => ({
       res: COMMON_ERR,
-      msg: error,
-    };
-  }
+      msg: err,
+    }));
+
+  // try {
+  //   const [info] = await getVoteRecordsByDateAndOpenId(openId, date);
+  //   const list = await getVoteRecordsByDate(date);
+  //   const [creator] = await findUserByOpenId(creatorId);
+  //   const members = await getUserList();
+  //   const shops = await getClearShopList();
+
+  //   ctx.body = {
+  //     res: 0,
+  //     data: {
+  //       date,
+  //       address,
+  //       creator,
+  //       info,
+  //       votes: list,
+  //       shops,
+  //       members,
+  //     },
+  //   };
+  // } catch (error) {
+  //   ctx.body = {
+  //     res: COMMON_ERR,
+  //     msg: error,
+  //   };
+  // }
 });
 
 // 投票记录

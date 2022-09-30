@@ -1,6 +1,7 @@
 const db = require('../utils/db');
 const dayjs = require('dayjs');
 const redis = require('../utils/redis');
+const { address } = require('../constants/app');
 const { getUserList } = require('./user.service');
 
 function getCurrentDate() {
@@ -14,17 +15,18 @@ function getCurrentDateTime() {
 function setCreator(openId) {
   const current = dayjs().hour();
   const timestamp = (24 - current) * 3600;
-  redis.set('creator', { openId }, timestamp);
+
+  return redis.set('creator', { openId }, timestamp);
 }
 
-function getCreator(openId) {
-  const creator = redis.get('creator');
+async function getCreator(openId) {
+  const creator = await redis.get('creator');
 
-  if (!creator) {
-    setCreator(openId);
+  if (!JSON.parse(creator) && openId) {
+    await setCreator(openId);
   }
 
-  return creator || { openId };
+  return JSON.parse(creator) || { openId };
 }
 
 /**
@@ -36,7 +38,13 @@ function getVoteRecordsByDate(date = '') {
   return db
     .query(
       `
-    select * from tmp_vote where create_at = '${date || currentDate}'
+      select v.*, u.avatar_url, u.nick_name, s.name
+      from tmp_vote v
+      left join tmp_user u
+      on u.open_id = v.member_id
+      left join tmp_shop s
+      on v.vote_id = s.id
+      where v.create_at like '${date || currentDate}%'
   `,
     )
     .then((list = []) => list);
@@ -48,7 +56,9 @@ function getVoteRecordsByDateAndOpenId(openId, date = '') {
   return db
     .query(
       `
-    select * from tmp_vote where create_at = '${date || currentDate}' and member_id = '${openId}'
+    select * from tmp_vote where create_at like '${
+      date || currentDate
+    }%' and member_id = '${openId}'
   `,
     )
     .then((list = []) => list);
@@ -76,11 +86,16 @@ function getDistinctVoteRecordsByOpenId(openId) {
  */
 async function vote({ openId, shopId }) {
   const createAt = getCurrentDateTime();
-  const address = '杭州市余杭区西溪八方城';
 
-  const { openId: creatorId } = getCreator();
+  const { openId: creatorId } = await getCreator();
+
   const users = await getUserList();
-  const votes = await getVoteRecordsByDateAndOpenId();
+  const hasVote = (await getVoteRecordsByDateAndOpenId(openId)).length > 0;
+  const votes = await getVoteRecordsByDate();
+
+  if (hasVote) {
+    return Promise.reject('您已投过票了');
+  }
 
   // TODO 11点投票截止
   // 当状态为2时，需要批量修改同一天记录里的status
@@ -91,7 +106,7 @@ async function vote({ openId, shopId }) {
   }
 
   return db.query(`
-  INSERT INTO tmp_vote ( 'create_at, address, creator_id, status, member_id, vote_id)
+  INSERT INTO tmp_vote (create_at, address, creator_id, status, member_id, vote_id)
   VALUES
   ('${createAt}', '${address}', '${creatorId}', ${status}, '${openId}', '${shopId}');
   `);
@@ -110,7 +125,7 @@ function updateVoteRecordByCreatorId({
   return db.query(`
     UPDATE tmp_vote
     SET result_id = '${shopId}', status = ${status}
-    WHERE creator_id = '${openId}' and create_at = '${date}'
+    WHERE creator_id = '${openId}' and create_at like '${date}%Í'
   `);
 }
 
