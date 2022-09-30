@@ -65,38 +65,14 @@ router.get('/detail', async (ctx) => {
   const { date, openId } = ctx.query;
   const { openId: creatorId } = await getCreator();
 
-  return Promise.all([
-    getVoteRecordsByDateAndOpenId(openId, date),
-    getVoteRecordsByDate(date),
-    findUserByOpenId(creatorId),
-    getUserList(),
-    getClearShopList(),
-  ])
-    .then(([[info], list, [creator], members, shops]) => ({
-      res: 0,
-      data: {
-        date,
-        address,
-        creator,
-        info,
-        votes: list,
-        shops,
-        members,
-      },
-    }))
-    .catch((err) => ({
-      res: COMMON_ERR,
-      msg: err,
-    }));
-
-  // try {
-  //   const [info] = await getVoteRecordsByDateAndOpenId(openId, date);
-  //   const list = await getVoteRecordsByDate(date);
-  //   const [creator] = await findUserByOpenId(creatorId);
-  //   const members = await getUserList();
-  //   const shops = await getClearShopList();
-
-  //   ctx.body = {
+  // return Promise.all([
+  //   getVoteRecordsByDateAndOpenId(openId, date),
+  //   getVoteRecordsByDate(date),
+  //   findUserByOpenId(creatorId),
+  //   getUserList(),
+  //   getClearShopList(),
+  // ])
+  //   .then(([[info], list, [creator], members, shops]) => ({
   //     res: 0,
   //     data: {
   //       date,
@@ -107,13 +83,37 @@ router.get('/detail', async (ctx) => {
   //       shops,
   //       members,
   //     },
-  //   };
-  // } catch (error) {
-  //   ctx.body = {
+  //   }))
+  //   .catch((err) => ({
   //     res: COMMON_ERR,
-  //     msg: error,
-  //   };
-  // }
+  //     msg: err,
+  //   }));
+
+  try {
+    const [info] = await getVoteRecordsByDateAndOpenId(openId, date);
+    const list = await getVoteRecordsByDate(date);
+    const [creator] = await findUserByOpenId(creatorId);
+    const members = await getUserList();
+    const shops = await getClearShopList();
+
+    ctx.body = {
+      res: 0,
+      data: {
+        date,
+        address,
+        creator,
+        info,
+        votes: list,
+        shops,
+        members,
+      },
+    };
+  } catch (error) {
+    ctx.body = {
+      res: COMMON_ERR,
+      msg: error,
+    };
+  }
 });
 
 // 投票记录
